@@ -7,249 +7,270 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthy & Divine (Slate 50 background, Emerald 600, Indigo 600, Amber 500 accents) -->
+    <!-- Application Structure Plan: The SPA is structured into three main thematic sections following an introductory hero section. 1. 'The 8 Verb Journey' uses an interactive stepper to let users sequentially explore the Greek verbs from 'Being' to 'Mission'. 2. 'Theological Architecture' employs an interactive grid of cards representing the 6 structural stages, allowing users to click to reveal deeper theological insights. 3. 'The Core Triad' utilizes a Chart.js Polar Area chart to visually emphasize the weight of the three most critical verbs (Meno, Agapao, Phero). This structure transforms a linear text analysis into an exploratory, self-paced learning journey. -->
+    <!-- Visualization & Content Choices: 8 Verbs -> Goal: Inform/Change -> Method: Interactive vertical timeline -> Justification: Shows progression without SVG using HTML/CSS styling. 6 Stages -> Goal: Organize -> Method: Interactive Grid Cards -> Justification: Groups related concepts neatly. Core Verbs -> Goal: Compare/Highlight -> Method: Chart.js Polar Area Chart -> Justification: Visually demonstrates the 'weight' or centrality of the top 3 concepts vs others. Library/Method: Vanilla JS, Chart.js, HTML/Tailwind. Confirming NO SVG. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
-        body { font-family: 'Noto Sans KR', sans-serif; background-color: #F3F4F6; }
-        .chart-container { position: relative; width: 100%; max-width: 800px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        body { font-family: 'Noto Sans KR', sans-serif; }
+        .chart-container { position: relative; width: 100%; max-width: 500px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
         @media (min-width: 768px) { .chart-container { height: 400px; } }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); }
-        .gradient-text { background: linear-gradient(to right, #1E3A8A, #8B5CF6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .verb-flow-line { width: 2px; height: 30px; background: linear-gradient(to bottom, #8B5CF6, #10B981); margin: 0 auto; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.3); }
+        .timeline-line::before { content: ''; position: absolute; left: 1.25rem; top: 2rem; bottom: -2rem; width: 2px; background-color: #e2e8f0; z-index: 0; }
+        .timeline-item:last-child .timeline-line::before { display: none; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
     </style>
 </head>
-<body class="text-gray-800 antialiased">
+<body class="bg-slate-50 text-slate-800 antialiased overflow-x-hidden selection:bg-emerald-200 selection:text-emerald-900">
 
-    <div class="max-w-6xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+    <nav class="fixed top-0 w-full glass-panel z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="text-xl font-black text-indigo-900 tracking-tight">John 15 <span class="text-emerald-600 font-normal">Analysis</span></div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium">
+                    <a href="#intro" class="text-slate-600 hover:text-emerald-600 transition">개요</a>
+                    <a href="#verbs" class="text-slate-600 hover:text-emerald-600 transition">8대 동사 흐름</a>
+                    <a href="#structure" class="text-slate-600 hover:text-emerald-600 transition">신학적 구조</a>
+                    <a href="#core" class="text-slate-600 hover:text-emerald-600 transition">핵심 3기둥</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-24 pb-20">
         
-        <header class="text-center mb-16 bg-white rounded-3xl shadow-xl p-10 border-t-8 border-blue-600 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-blue-600 via-purple-500 to-emerald-400"></div>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">요한복음 15:1-16</h1>
-            <h2 class="text-2xl md:text-3xl font-bold gradient-text mb-6">구원과 사명의 유기적 흐름</h2>
-            <p class="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
-                그리스도와의 신비적 연합을 다루는 포도나무 비유는 단순한 상태의 묘사가 아닙니다. 
-                본문에 등장하는 핵심 헬라어 동사들의 흐름을 추적해 보면, 
-                <span class="font-bold text-blue-700">"존재(거함)"</span>에서 시작하여 
-                <span class="font-bold text-emerald-600">"사명(파송)"</span>으로 완성되는 역동적이고 유기적인 구원의 여정을 발견할 수 있습니다.
+        <header id="intro" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-12 pb-20">
+            <div class="inline-block px-4 py-1 rounded-full bg-emerald-100 text-emerald-800 text-sm font-bold mb-6 tracking-wide">
+                요한복음 15:1-16 심층 연구
+            </div>
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 mb-6 leading-tight">
+                구원과 사명의 <br><span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-emerald-500">유기적 흐름</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-600 leading-relaxed max-w-2xl mx-auto mb-10">
+                그리스도와의 연합을 나타내는 포도나무 비유는 정체되어 있지 않습니다. 이 본문은 성도의 삶이 어떻게 <strong class="text-indigo-700">"존재(거함)"</strong>에서 시작하여 세상 속의 <strong class="text-emerald-700">"사명(파송)"</strong>으로 나아가는지, 헬라어 동사의 역동적인 흐름을 통해 증명합니다.
             </p>
+            <div class="flex flex-col sm:flex-row justify-center gap-4">
+                <a href="#verbs" class="px-8 py-3 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition shadow-lg shadow-indigo-200">동사 흐름 탐색하기</a>
+                <a href="#core" class="px-8 py-3 rounded-lg bg-white text-indigo-600 font-semibold border border-indigo-200 hover:bg-slate-50 transition shadow-sm">핵심 동사 보기</a>
+            </div>
         </header>
 
-        <section class="mb-20">
-            <div class="text-center mb-10">
-                <h3 class="text-3xl font-bold text-gray-800 mb-3">8대 핵심 동사의 전개</h3>
-                <p class="text-gray-500">존재의 근원에서 사명의 현장으로 나아가는 영적 프로세스</p>
+        <section id="verbs" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">1. 8대 동사의 궤적: 존재에서 사명으로</h2>
+                <p class="text-slate-600 max-w-3xl">본문에 등장하는 8개의 핵심 헬라어 동사는 순차적인 영적 성장의 단계를 보여줍니다. 왼쪽의 동사 목록을 클릭하여 각 단계의 깊은 의미와 신학적 배경을 확인해 보십시오.</p>
             </div>
 
-            <div class="flex flex-col items-center">
+            <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                <div class="lg:w-1/3 relative" id="verb-stepper">
+                    
+                </div>
                 
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-blue-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-blue-500 mb-1">STEP 01. 정결</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">καθαίρει</div>
-                    <div class="text-gray-500 mb-2">(kathairei)</div>
-                    <div class="text-lg font-medium text-gray-700">깨끗하게 하다</div>
+                <div class="lg:w-2/3">
+                    <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 p-8 md:p-12 sticky top-24 border border-slate-100" id="verb-display-panel">
+                        <div class="text-sm font-bold text-indigo-500 tracking-wider mb-2 uppercase" id="panel-step">Step 1</div>
+                        <h3 class="text-4xl font-black text-slate-900 mb-2 font-serif" id="panel-greek">καθαίρει</h3>
+                        <div class="text-xl font-medium text-emerald-600 mb-6" id="panel-meaning">깨끗하게 하다 (kathairei)</div>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">문법적 특징</h4>
+                                <p class="text-slate-700 bg-slate-50 p-3 rounded-lg border border-slate-100" id="panel-grammar">현재 능동태 직설법. 지속적인 하나님의 행동.</p>
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-1">신학적 의미</h4>
+                                <p class="text-slate-800 leading-relaxed text-lg" id="panel-theology">농부이신 하나님의 주권적 사역입니다. 열매를 더 맺게 하기 위해 가지의 불필요한 것들을 지속적으로 제거하고 정결케 하시는 하나님의 사랑의 징계이자 은혜의 시작점입니다.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-purple-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-purple-500 mb-1">STEP 02. 연합</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">μένω</div>
-                    <div class="text-gray-500 mb-2">(menō)</div>
-                    <div class="text-lg font-medium text-gray-700">거하다</div>
-                </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-yellow-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-yellow-500 mb-1">STEP 03. 결과</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">φέρω</div>
-                    <div class="text-gray-500 mb-2">(pherō)</div>
-                    <div class="text-lg font-medium text-gray-700">열매 맺다</div>
-                </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-pink-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-pink-500 mb-1">STEP 04. 관계</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">ἀγαπάω</div>
-                    <div class="text-gray-500 mb-2">(agapaō)</div>
-                    <div class="text-lg font-medium text-gray-700">사랑하다</div>
-                </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-indigo-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-indigo-500 mb-1">STEP 05. 순종</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">τηρέω</div>
-                    <div class="text-gray-500 mb-2">(tēreō)</div>
-                    <div class="text-lg font-medium text-gray-700">지키다</div>
-                </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-red-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-red-500 mb-1">STEP 06. 희생</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">τίθημι</div>
-                    <div class="text-gray-500 mb-2">(tithēmi)</div>
-                    <div class="text-lg font-medium text-gray-700">두다 / 내려놓다</div>
-                </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-teal-500 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-teal-500 mb-1">STEP 07. 소명</div>
-                    <div class="text-2xl font-black text-gray-800 mb-1">ἐκλέγομαι</div>
-                    <div class="text-gray-500 mb-2">(eklegomai)</div>
-                    <div class="text-lg font-medium text-gray-700">택하다</div>
-                </div>
-
-                <div class="verb-flow-line"></div><div class="text-gray-400 mb-2">▼</div>
-
-                <div class="glass-card shadow-lg rounded-xl p-6 w-full max-w-md text-center border-l-4 border-emerald-600 bg-emerald-50 transform hover:-translate-y-1 transition duration-300">
-                    <div class="text-sm font-bold text-emerald-600 mb-1">STEP 08. 목적</div>
-                    <div class="text-2xl font-black text-gray-900 mb-1">ὑπάγω</div>
-                    <div class="text-gray-500 mb-2">(hypagō)</div>
-                    <div class="text-lg font-bold text-emerald-700">가다 / 파송되다</div>
-                </div>
-
             </div>
         </section>
 
-        <section class="mb-20">
-            <div class="text-center mb-10">
-                <h3 class="text-3xl font-bold text-gray-800 mb-3">핵심 신학 구조 연구</h3>
-                <p class="text-gray-500">하나님의 주권적 은혜에서 시작되어 제자의 삶으로 완성되는 6단계 구조</p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                
-                <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500 flex flex-col h-full">
-                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold mb-4">1</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">하나님이 시작하심</h4>
-                    <p class="text-sm text-gray-600 mb-4 flex-grow">모든 영적 생명의 기원은 농부이신 하나님의 주권적 행위에 있습니다.</p>
-                    <div class="bg-gray-50 p-3 rounded text-sm font-medium">
-                        <span class="text-blue-600 font-bold">αἴρω</span> (제거하다)<br>
-                        <span class="text-blue-600 font-bold">καθαίρω</span> (깨끗하게 하다)
-                    </div>
+        <section id="structure" class="bg-slate-900 py-20 mt-12">
+            <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-16 text-center text-white">
+                    <h2 class="text-3xl font-bold mb-4">2. 핵심 신학 구조 6단계</h2>
+                    <p class="text-slate-400 max-w-2xl mx-auto">요한복음 15장의 텍스트는 하나님으로부터 시작되어 인간의 책임과 관계의 심화를 거쳐 궁극적 파송으로 이어지는 완벽한 6단계의 신학적 건축물입니다. 카드를 클릭하여 헬라어 원어와 세부 의미를 확인하세요.</p>
                 </div>
 
-                <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-purple-500 flex flex-col h-full">
-                    <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold mb-4">2</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">인간의 책임</h4>
-                    <p class="text-sm text-gray-600 mb-4 flex-grow">하나님의 은혜에 대한 성도의 유일하고도 절대적인 책임은 관계적 연합입니다.</p>
-                    <div class="bg-gray-50 p-3 rounded text-sm font-medium">
-                        <span class="text-purple-600 font-bold">μένω</span> (거하라, 명령형)
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="structure-grid">
+                    
                 </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-yellow-500 flex flex-col h-full">
-                    <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 font-bold mb-4">3</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">결과</h4>
-                    <p class="text-sm text-gray-600 mb-4 flex-grow">생명의 연합은 필연적으로 삶의 외적 변화와 기도의 능력을 가져옵니다.</p>
-                    <div class="bg-gray-50 p-3 rounded text-sm font-medium">
-                        <span class="text-yellow-600 font-bold">φέρω</span> (열매 맺다)<br>
-                        <span class="text-yellow-600 font-bold">αἰτέω</span> (기도 응답)
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-pink-500 flex flex-col h-full">
-                    <div class="w-10 h-10 bg-pink-100 rounded-full flex items-center justify-center text-pink-600 font-bold mb-4">4</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">관계 심화</h4>
-                    <p class="text-sm text-gray-600 mb-4 flex-grow">열매 맺는 삶은 단순히 업적이 아닌 사랑에 기초한 순종으로 나아갑니다.</p>
-                    <div class="bg-gray-50 p-3 rounded text-sm font-medium">
-                        <span class="text-pink-600 font-bold">ἀγαπάω</span> (사랑하다)<br>
-                        <span class="text-pink-600 font-bold">τηρέω</span> (계명 지키다)
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-indigo-500 flex flex-col h-full">
-                    <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 font-bold mb-4">5</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">정체성 변화</h4>
-                    <p class="text-sm text-gray-600 mb-4 flex-grow">종속적 관계에서 뜻을 공유하는 인격적이고 치밀한 관계로 격상됩니다.</p>
-                    <div class="bg-gray-50 p-3 rounded text-sm font-medium font-bold text-indigo-700 text-center">
-                        "친구가 되다"
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6 border-t-4 border-emerald-500 flex flex-col h-full">
-                    <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 font-bold mb-4">6</div>
-                    <h4 class="text-xl font-bold text-gray-800 mb-2">궁극적 목적</h4>
-                    <p class="text-sm text-gray-600 mb-4 flex-grow">이 모든 과정의 종착지는 세상을 향한 파송과 변함없는 생명력의 전수입니다.</p>
-                    <div class="bg-gray-50 p-3 rounded text-sm font-medium">
-                        <span class="text-emerald-600 font-bold">ἐκλέγομαι</span> (택함)<br>
-                        <span class="text-emerald-600 font-bold">ὑπάγω</span> (보냄)
-                    </div>
-                </div>
-
             </div>
         </section>
 
-        <section class="mb-20">
-            <div class="text-center mb-10">
-                <h3 class="text-3xl font-bold text-gray-800 mb-3">본문을 결정짓는 3대 핵심 동사 분석</h3>
-                <p class="text-gray-500">수많은 개념들 중 신앙의 본질을 지탱하는 세 개의 기둥</p>
+        <section id="core" class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">3. 본문을 결정짓는 3대 핵심 기둥</h2>
+                <p class="text-slate-600 max-w-2xl mx-auto">수많은 동사 중에서도 요한복음 15장의 심장을 구성하는 세 가지 동사가 있습니다. 이들은 각각 신앙의 '존재', '관계', '결과'를 대변하며 유기적으로 연결되어 있습니다.</p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                
-                <div class="bg-white p-8 rounded-2xl shadow-lg">
-                    <h4 class="text-xl font-bold text-gray-800 mb-6 text-center">요한복음 15장 핵심 동사 출현 빈도 및 중요도</h4>
-                    <p class="text-sm text-gray-500 mb-6 text-center">본문 내에서 특정 개념이 얼마나 반복되고 강조되는지를 시각화하여 존재(거함)의 압도적 중요성을 확인합니다.</p>
+            <div class="flex flex-col lg:flex-row gap-12 items-center bg-white rounded-3xl p-8 lg:p-12 shadow-sm border border-slate-200">
+                <div class="w-full lg:w-1/2">
                     <div class="chart-container">
-                        <canvas id="verbFrequencyChart"></canvas>
+                        <canvas id="coreVerbsChart"></canvas>
                     </div>
+                    <p class="text-center text-sm text-slate-400 mt-4">영적 비중과 상호작용을 나타내는 시각화 모형</p>
                 </div>
 
-                <div class="space-y-6">
-                    <div class="bg-white p-6 rounded-xl shadow-md border-l-8 border-purple-500">
-                        <h5 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="text-purple-500 mr-3 text-3xl">1</span> μένω <span class="text-lg text-gray-500 ml-2 font-normal">(거하다)</span>
-                        </h5>
-                        <p class="mt-2 text-purple-700 font-semibold mb-2">존재론적 중심 (Ontological Center)</p>
-                        <p class="text-gray-600">본문에서 가장 많이 반복되는 명령형 동사입니다. 그리스도인의 삶은 행위에서 출발하지 않고, 그리스도 안에 머무는 <strong>'존재적 연합'</strong>에서 모든 것이 시작됨을 증명합니다.</p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-md border-l-8 border-pink-500">
-                        <h5 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="text-pink-500 mr-3 text-3xl">2</span> ἀγαπάω <span class="text-lg text-gray-500 ml-2 font-normal">(사랑하다)</span>
-                        </h5>
-                        <p class="mt-2 text-pink-700 font-semibold mb-2">관계의 본질 (Relational Essence)</p>
-                        <p class="text-gray-600">거함(μένω)을 유지하는 동력이자, 열매(φέρω)를 맺는 구체적인 방식입니다. 율법적 의무가 아닌 성부와 성자 사이의 완전한 사랑이 성도에게 흘러가는 <strong>'관계적 토대'</strong>입니다.</p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-xl shadow-md border-l-8 border-yellow-500">
-                        <h5 class="text-2xl font-bold text-gray-800 flex items-center">
-                            <span class="text-yellow-500 mr-3 text-3xl">3</span> φέρω <span class="text-lg text-gray-500 ml-2 font-normal">(열매 맺다)</span>
-                        </h5>
-                        <p class="mt-2 text-yellow-700 font-semibold mb-2">사명의 결과 (Missional Result)</p>
-                        <p class="text-gray-600">인간의 노력으로 쟁취하는 성과가 아닙니다. 참포도나무에 온전히 붙어있을 때 자연스럽게 맺히는 <strong>'생명의 결과물'</strong>이며, 이는 곧 세상을 향한 축복과 사명으로 연결됩니다.</p>
-                    </div>
+                <div class="w-full lg:w-1/2 flex flex-col gap-6" id="core-pillars">
+                    
                 </div>
-
             </div>
         </section>
 
-        <section class="bg-gradient-to-br from-gray-900 to-blue-900 rounded-3xl p-10 shadow-2xl text-white text-center relative overflow-hidden">
-            <div class="absolute -top-24 -right-24 w-64 h-64 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-            <div class="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-50"></div>
-            
-            <div class="relative z-10">
-                <h3 class="text-2xl md:text-3xl font-bold text-blue-200 mb-6 tracking-wider">CONCLUSION</h3>
-                <p class="text-xl md:text-2xl font-light leading-relaxed max-w-4xl mx-auto mb-10">
-                    요한복음 15:1-16의 동사 흐름은<br>
-                    <span class="font-bold text-white text-3xl mt-4 block">하나님의 정결 → 인간의 거함 → 사랑의 순종 → 열매 → 선택과 파송</span>
+        <section class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 mb-12">
+            <div class="bg-gradient-to-br from-emerald-600 to-indigo-800 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden text-center">
+                <h2 class="text-2xl font-bold text-emerald-100 mb-4 tracking-widest uppercase text-sm">최종 결론</h2>
+                <h3 class="text-3xl md:text-4xl font-black mb-10 leading-snug">구원과 사명의 유기적 완성</h3>
+                
+                <div class="flex flex-col md:flex-row justify-center items-center gap-2 md:gap-4 flex-wrap text-lg md:text-xl font-bold">
+                    <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">하나님의 정결</div>
+                    <div class="text-emerald-300 transform rotate-90 md:rotate-0">&#10140;</div>
+                    <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">인간의 거함</div>
+                    <div class="text-emerald-300 transform rotate-90 md:rotate-0">&#10140;</div>
+                    <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">사랑의 순종</div>
+                    <div class="text-emerald-300 transform rotate-90 md:rotate-0">&#10140;</div>
+                    <div class="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg text-amber-300">열매</div>
+                    <div class="text-emerald-300 transform rotate-90 md:rotate-0">&#10140;</div>
+                    <div class="bg-white border-2 border-transparent text-indigo-900 px-6 py-2 rounded-lg shadow-lg">선택과 파송</div>
+                </div>
+                
+                <p class="mt-10 text-emerald-50 leading-relaxed max-w-2xl mx-auto">
+                    우리의 구원은 단순히 천국에 가는 티켓이 아닙니다. 예수 그리스도 안에 머무는 <strong>존재적 연합(거함)</strong>에서 피어난 <strong>사랑</strong>이 자연스러운 <strong>열매</strong>를 맺게 하고, 결국 세상을 향해 <strong>파송</strong>되는 거룩하고 유기적인 생명 활동입니다.
                 </p>
-                <div class="inline-block bg-white/10 backdrop-blur border border-white/20 rounded-xl p-6 shadow-inner">
-                    <p class="text-lg text-gray-200">
-                        그리스도인의 삶은 단순한 도덕적 수양이 아닙니다. 그것은 하나님께서 주도하시는 철저한 
-                        <span class="text-yellow-400 font-bold">존재론적 연합</span>에서 피어나는 생명력이며, 
-                        궁극적으로 세상을 향해 나아가는 <span class="text-emerald-400 font-bold">거룩한 사명</span>의 유기적 흐름입니다.
-                    </p>
-                </div>
             </div>
         </section>
 
-    </div>
+    </main>
+
+    <footer class="bg-slate-900 py-8 text-center text-slate-500 text-sm">
+        <p>&copy; 2023 John 15 Theological Analysis Dashboard. All information based on provided source report.</p>
+    </footer>
 
     <script>
+        const verbsData = [
+            { greek: "καθαίρει", roman: "kathairei", meaning: "깨끗하게 하다", type: "하나님의 주권적 은혜", desc: "농부이신 하나님의 주권적 사역입니다. 열매를 더 맺게 하기 위해 가지의 불필요한 것들을 지속적으로 제거하고 정결케 하시는 하나님의 사랑의 징계이자 은혜의 시작점입니다." },
+            { greek: "μένω", roman: "menō", meaning: "거하다", type: "인간의 절대적 책임", desc: "명령형으로 쓰였습니다. 가지가 포도나무에 붙어 생명력을 공급받듯, 신자가 그리스도와 인격적이고 지속적으로 연합된 상태를 유지해야 함을 의미합니다. 모든 영적 생명의 존재론적 기초입니다." },
+            { greek: "φέρω", roman: "pherō", meaning: "열매 맺다", type: "자연스러운 결과", desc: "거함(menō)의 필연적 결과입니다. 인간의 노력으로 만들어내는 업적이 아니라, 생명의 교제를 통해 자연스럽게 외부로 드러나는 영적 성품과 삶의 변화입니다." },
+            { greek: "ἀγαπάω", roman: "agapaō", meaning: "사랑하다", type: "관계의 심화", desc: "성부 하나님이 성자 예수님을 사랑하신 그 완전하고 희생적인 사랑입니다. 의무감이나 율법적 구속이 아닌, 자발적이고 깊은 인격적 관계의 본질을 나타냅니다." },
+            { greek: "τηρέω", roman: "tēreō", meaning: "지키다", type: "사랑의 증명", desc: "계명을 지키는 것은 사랑의 결과이자 증명입니다. 억지로 순종하는 것이 아니라, 사랑하기 때문에 그분의 뜻을 주의 깊게 보존하고 행하는 능동적인 순종입니다." },
+            { greek: "τίθημι", roman: "tithēmi", meaning: "두다 / 내려놓다", type: "최고의 헌신", desc: "친구를 위해 자기 목숨을 '내어놓는' 궁극적인 희생의 사랑을 의미합니다. 예수 그리스도의 십자가 대속을 가리키며, 동시에 제자들이 걸어가야 할 이타적 삶의 모본입니다." },
+            { greek: "ἐκλέγομαι", roman: "eklegomai", meaning: "택하다", type: "주도권의 선언", desc: "구원과 사명의 기원이 인간의 결정이 아닌 하나님의 주권적 선택에 있음을 명확히 합니다. 이는 제자들에게 흔들리지 않는 소명의식과 정체성의 확신을 줍니다." },
+            { greek: "ὑπάγω", roman: "hypagō", meaning: "가다 / 파송되다", type: "궁극적 목적", desc: "세상과 분리되어 머무는 것에 그치지 않고, 세상 속으로 능동적으로 파송되는 것을 의미합니다. 구원의 최종 목적이 곧 세상을 향한 선교적 사명임을 확증하는 동사입니다." }
+        ];
+
+        const stepperContainer = document.getElementById('verb-stepper');
+        const displayPanel = {
+            step: document.getElementById('panel-step'),
+            greek: document.getElementById('panel-greek'),
+            meaning: document.getElementById('panel-meaning'),
+            grammar: document.getElementById('panel-grammar'),
+            theology: document.getElementById('panel-theology')
+        };
+
+        function renderStepper() {
+            verbsData.forEach((verb, index) => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item relative pl-12 pb-6 cursor-pointer group';
+                item.onclick = () => updatePanel(index);
+                
+                const isFirst = index === 0;
+                const dotColor = isFirst ? 'bg-indigo-600 border-indigo-200' : 'bg-slate-200 border-white group-hover:bg-emerald-400';
+                const textColor = isFirst ? 'text-indigo-700 font-bold' : 'text-slate-600 group-hover:text-emerald-700';
+
+                item.innerHTML = `
+                    <div class="timeline-line"></div>
+                    <div class="absolute left-0 top-1 w-6 h-6 rounded-full border-4 transition-colors duration-300 ${dotColor} z-10 verb-dot" data-index="${index}"></div>
+                    <h4 class="text-lg transition-colors duration-300 ${textColor} verb-title" data-index="${index}">${verb.greek} <span class="text-sm text-slate-400 font-normal ml-1">(${verb.meaning})</span></h4>
+                `;
+                stepperContainer.appendChild(item);
+            });
+        }
+
+        function updatePanel(index) {
+            const verb = verbsData[index];
+            
+            document.querySelectorAll('.verb-dot').forEach((dot, i) => {
+                dot.className = `absolute left-0 top-1 w-6 h-6 rounded-full border-4 transition-colors duration-300 z-10 verb-dot ${i === index ? 'bg-indigo-600 border-indigo-200' : 'bg-slate-200 border-white group-hover:bg-emerald-400'}`;
+            });
+            document.querySelectorAll('.verb-title').forEach((title, i) => {
+                title.className = `text-lg transition-colors duration-300 verb-title ${i === index ? 'text-indigo-700 font-bold' : 'text-slate-600 group-hover:text-emerald-700'}`;
+            });
+
+            const panelElement = document.getElementById('verb-display-panel');
+            panelElement.style.opacity = 0;
+            
+            setTimeout(() => {
+                displayPanel.step.innerText = `STEP ${index + 1}`;
+                displayPanel.greek.innerText = verb.greek;
+                displayPanel.meaning.innerText = `${verb.meaning} (${verb.roman})`;
+                displayPanel.grammar.innerText = verb.type;
+                displayPanel.theology.innerText = verb.desc;
+                panelElement.style.transition = 'opacity 0.3s ease';
+                panelElement.style.opacity = 1;
+            }, 150);
+        }
+
+        const structureData = [
+            { num: '①', title: '하나님이 시작하심', greek: 'αἴρω (제거하다)<br>καθαίρω (깨끗하게 하다)', desc: '생명 사역의 기원. 농부이신 하나님이 가지를 치고 정결케 하시는 주권적 은혜의 단계입니다.' },
+            { num: '②', title: '인간의 책임', greek: 'μένω (거하라)', desc: '성도의 유일한 임무. 명령형으로 주어졌으며, 주님과의 지속적이고 인격적인 연합 상태를 의미합니다.' },
+            { num: '③', title: '결과', greek: 'φέρω (열매 맺다)<br>αἰτέω (기도 응답)', desc: '생명 연합의 필연적 산출물. 삶의 변화와 기도의 능력이 자연스럽게 주어지는 단계입니다.' },
+            { num: '④', title: '관계 심화', greek: 'ἀγαπάω (사랑하다)<br>τηρέω (계명 지키다)', desc: '율법적 의무를 넘어선 사랑의 순종. 성부와 성자의 사랑이 신자에게 흘러들어오는 단계입니다.' },
+            { num: '⑤', title: '정체성 변화', greek: 'φίλος (친구가 되다)', desc: '종속적 관계에서 뜻을 공유하는 인격적 관계로의 격상. 주인의 뜻을 아는 친밀한 동역자가 됩니다.' },
+            { num: '⑥', title: '궁극적 목적', greek: 'ἐκλέγομαι (택함)<br>ὑπάγω (보냄)', desc: '존재의 완성. 택함 받은 자가 생명을 머금고 세상을 향해 파송되어 열매 맺는 사명적 단계입니다.' }
+        ];
+
+        const structureGrid = document.getElementById('structure-grid');
+        structureData.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'bg-slate-800 rounded-xl p-6 border border-slate-700 hover:border-indigo-500 transition-colors cursor-pointer group';
+            card.innerHTML = `
+                <div class="text-indigo-400 font-bold text-xl mb-2">${item.num} ${item.title}</div>
+                <div class="h-0 overflow-hidden group-hover:h-auto group-hover:mt-4 transition-all duration-300 opacity-0 group-hover:opacity-100">
+                    <div class="text-emerald-400 font-serif text-lg mb-2">${item.greek}</div>
+                    <p class="text-slate-300 text-sm leading-relaxed">${item.desc}</p>
+                </div>
+                <div class="text-slate-500 text-sm mt-4 group-hover:hidden flex items-center gap-2">&#10133; 클릭/호버하여 자세히 보기</div>
+            `;
+            
+            card.addEventListener('click', () => {
+                const content = card.querySelector('.h-0');
+                if(content.classList.contains('h-auto')) {
+                    content.classList.remove('h-auto', 'mt-4', 'opacity-100');
+                    card.querySelector('.group-hover\\:hidden').style.display = 'flex';
+                } else {
+                    content.classList.add('h-auto', 'mt-4', 'opacity-100');
+                    card.querySelector('.group-hover\\:hidden').style.display = 'none';
+                }
+            });
+
+            structureGrid.appendChild(card);
+        });
+
+        const coreData = [
+            { greek: 'μένω', meaning: '거하다', subtitle: '존재론적 중심', desc: '모든 것의 기초입니다. 행위가 아닌 관계적 연합이 신앙의 출발점입니다.', color: 'border-indigo-500', bg: 'bg-indigo-50' },
+            { greek: 'ἀγαπάω', meaning: '사랑하다', subtitle: '관계의 본질', desc: '거함을 유지하고 순종을 가능케 하는 원동력입니다. 생명의 통로입니다.', color: 'border-pink-500', bg: 'bg-pink-50' },
+            { greek: 'φέρω', meaning: '열매 맺다', subtitle: '사명의 결과', desc: '거함과 사랑의 최종 아웃풋입니다. 세상을 향한 증거이자 사명의 완수입니다.', color: 'border-emerald-500', bg: 'bg-emerald-50' }
+        ];
+
+        const corePillarsContainer = document.getElementById('core-pillars');
+        coreData.forEach((item, index) => {
+            const div = document.createElement('div');
+            div.className = `p-5 rounded-xl border-l-4 ${item.color} ${item.bg}`;
+            div.innerHTML = `
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="text-2xl font-black text-slate-800 font-serif">${item.greek} <span class="text-base font-normal text-slate-500 ml-2">(${item.meaning})</span></h4>
+                    <span class="px-3 py-1 bg-white rounded-full text-xs font-bold shadow-sm text-slate-600">${item.subtitle}</span>
+                </div>
+                <p class="text-slate-700">${item.desc}</p>
+            `;
+            corePillarsContainer.appendChild(div);
+        });
+
         function wrapLabel(label) {
             if (label.length <= 16) return label;
             const words = label.split(' ');
@@ -268,43 +289,25 @@
             return lines;
         }
 
-        const rawLabels = [
-            "μένω (거하다, 존재의 기반)", 
-            "ἀγαπάω (사랑하다, 관계 동력)", 
-            "φέρω (열매 맺다, 생명 결과)", 
-            "τηρέω (지키다, 순종)", 
-            "αἰτέω (구하다, 기도 응답)", 
-            "καθαίρω (깨끗게 하다)", 
-            "ἐκλέγομαι (택하다, 소명)", 
-            "ὑπάγω (가다, 사명 파송)"
-        ];
-        
-        const wrappedLabels = rawLabels.map(wrapLabel);
-        
-        const dataValues = [11, 9, 8, 3, 2, 2, 1, 1]; 
-        
-        const backgroundColors = [
-            'rgba(139, 92, 246, 0.8)', 
-            'rgba(236, 72, 153, 0.8)', 
-            'rgba(245, 158, 11, 0.8)', 
-            'rgba(99, 102, 241, 0.7)', 
-            'rgba(59, 130, 246, 0.7)',  
-            'rgba(14, 165, 233, 0.6)', 
-            'rgba(20, 184, 166, 0.6)', 
-            'rgba(16, 185, 129, 0.9)'  
-        ];
+        const rawChartLabels = ["μένω (존재/거함)", "ἀγαπάω (관계/사랑)", "φέρω (결과/열매)", "기타 동사들 (보조적 요소)"];
+        const wrappedChartLabels = rawChartLabels.map(wrapLabel);
 
-        const ctx = document.getElementById('verbFrequencyChart').getContext('2d');
+        const ctx = document.getElementById('coreVerbsChart').getContext('2d');
         new Chart(ctx, {
-            type: 'bar',
+            type: 'polarArea',
             data: {
-                labels: wrappedLabels,
+                labels: wrappedChartLabels,
                 datasets: [{
-                    label: '성경 본문 내 출현 빈도 및 신학적 비중',
-                    data: dataValues,
-                    backgroundColor: backgroundColors,
-                    borderRadius: 6,
-                    borderWidth: 0
+                    label: '신학적 비중 및 연결성',
+                    data: [100, 85, 80, 40],
+                    backgroundColor: [
+                        'rgba(79, 70, 229, 0.7)',
+                        'rgba(236, 72, 153, 0.7)', 
+                        'rgba(16, 185, 129, 0.7)',
+                        'rgba(203, 213, 225, 0.5)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
                 }]
             },
             options: {
@@ -312,7 +315,8 @@
                 maintainAspectRatio: false,
                 plugins: {
                     legend: {
-                        display: false
+                        position: 'bottom',
+                        labels: { font: { family: 'Noto Sans KR' }, padding: 20 }
                     },
                     tooltip: {
                         callbacks: {
@@ -329,30 +333,15 @@
                     }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        },
-                        title: {
-                            display: true,
-                            text: '강조 및 빈도 수준',
-                            font: { family: 'Noto Sans KR', size: 12 }
-                        }
-                    },
-                    x: {
-                        grid: {
-                            display: false
-                        },
-                        ticks: {
-                            font: { family: 'Noto Sans KR', size: 11 },
-                            maxRotation: 45,
-                            minRotation: 45
-                        }
+                    r: {
+                        ticks: { display: false },
+                        grid: { color: 'rgba(0,0,0,0.05)' }
                     }
                 }
             }
         });
+
+        renderStepper();
     </script>
 </body>
 </html>
